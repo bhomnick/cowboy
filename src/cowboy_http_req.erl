@@ -405,9 +405,14 @@ body(Length, Req=#http_req{socket=Socket, transport=Transport,
 %% application/x-www-form-urlencoded string. Essentially a POST query string.
 -spec body_qs(#http_req{}) -> {list({binary(), binary() | true}), #http_req{}}.
 body_qs(Req=#http_req{urldecode={URLDecFun, URLDecArg}}) ->
-	{ok, Body, Req2} = body(Req),
-	{cowboy_http:x_www_form_urlencoded(
-		Body, fun(Bin) -> URLDecFun(Bin, URLDecArg) end), Req2}.
+	case body(Req) of 
+	    {ok, Body, Req2} ->
+	        {cowboy_http:x_www_form_urlencoded(
+	            Body, fun(Bin) -> URLDecFun(Bin, URLDecArg) end), Req2};
+	    {error, badarg} ->
+	        {[], Req}
+    end.
+	
 
 %% Multipart Request API.
 
